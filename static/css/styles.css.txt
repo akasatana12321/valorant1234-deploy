@@ -1,0 +1,82 @@
+/* 既存のスタイル */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #0d0d0d;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #1a1a1a;
+    color: #e600ff;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 0 20px #e600ff;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2em;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #1a1a1a;
+    box-shadow: 0 0 20px rgba(230, 0, 255, 0.5);
+    border-radius: 10px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background: #333;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background 0.3s, transform 0.3s;
+}
+
+li:hover {
+    background: #444;
+    transform: scale(1.02);
+}
+
+li strong {
+    display: block;
+    color: #e600ff;
+    font-size: 1.2em;
+    text-decoration: none;
+}
+
+li span {
+    color: #ccc;
+    font-size: 0.9em;
+}
+
+/* レスポンシブデザインの追加 */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 20px 0;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    li {
+        padding: 10px 5px;
+    }
+}
