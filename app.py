@@ -29,7 +29,7 @@ def login():
         redirect_url = auth.get_authorization_url()
         session['request_token'] = auth.request_token
         return redirect(redirect_url)
-    except tweepy.TweepError as e:
+    except tweepy.TweepyException as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/callback')
@@ -43,7 +43,7 @@ def callback():
         session['access_token'] = auth.access_token
         session['access_token_secret'] = auth.access_token_secret
         return redirect(url_for('index'))
-    except tweepy.TweepError as e:
+    except tweepy.TweepyException as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/tweets', methods=['GET'])
@@ -67,10 +67,10 @@ def get_tweets():
             return jsonify(tweet_data)
         else:
             return jsonify([])
-    except tweepy.TweepError as e:
-        return jsonify({"error": str(e)}), 500
+    except tweepy.Forbidden as e:
+        return jsonify({"error": "Access forbidden: " + str(e)}), 403
     except Exception as e:
-        return jsonify({"error": "An error occurred while fetching tweets."}), 500
+        return jsonify({"error": "An error occurred: " + str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
