@@ -1,5 +1,4 @@
-from flask import Flask, redirect, url_for, request, session
-from flask import render_template, jsonify
+from flask import Flask, redirect, url_for, request, session, jsonify, render_template
 import tweepy
 import datetime
 from dotenv import load_dotenv
