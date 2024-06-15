@@ -18,11 +18,30 @@
                 const tweetsList = document.getElementById('tweets');
                 data.forEach(tweet => {
                     const tweetItem = document.createElement('li');
-                    tweetItem.textContent = `${tweet.user}: ${tweet.text} (Likes: ${tweet.likes})`;
+                    const tweetLink = document.createElement('a');
+                    const userLink = document.createElement('a');
+
+                    userLink.href = `https://twitter.com/${tweet.user}`;
+                    userLink.textContent = tweet.user;
+                    userLink.target = "_blank";
+
+                    tweetLink.href = `https://twitter.com/${tweet.user}/status/${tweet.id}`;
+                    tweetLink.textContent = tweet.text;
+                    tweetLink.target = "_blank";
+
+                    tweetItem.appendChild(userLink);
+                    tweetItem.appendChild(document.createTextNode(': '));
+                    tweetItem.appendChild(tweetLink);
+                    tweetItem.appendChild(document.createTextNode(` (Likes: ${tweet.likes})`));
+                    
                     tweetsList.appendChild(tweetItem);
                 });
+            })
+            .catch(error => {
+                console.error('Error fetching tweets:', error);
+                const tweetsList = document.getElementById('tweets');
+                tweetsList.innerHTML = '<li>Error fetching tweets. Please try again later.</li>';
             });
     </script>
 </body>
 </html>
-
