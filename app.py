@@ -48,16 +48,18 @@ def get_tweets():
     query = '#VALORANT lang:ja -is:retweet'
     response = client.search_recent_tweets(query=query, start_time=date_since, max_results=100, tweet_fields=['created_at', 'public_metrics'])
 
-    sorted_tweets = sorted(response.data, key=lambda tweet: tweet.public_metrics['like_count'], reverse=True)
+    if response.data:
+        sorted_tweets = sorted(response.data, key=lambda tweet: tweet.public_metrics['like_count'], reverse=True)
+        tweet_data = [{
+            'user': tweet.author_id,
+            'text': tweet.text,
+            'likes': tweet.public_metrics['like_count'],
+            'id': tweet.id
+        } for tweet in sorted_tweets]
 
-    tweet_data = [{
-        'user': tweet.author_id,
-        'text': tweet.text,
-        'likes': tweet.public_metrics['like_count'],
-        'id': tweet.id
-    } for tweet in sorted_tweets]
-
-    return jsonify(tweet_data)
+        return jsonify(tweet_data)
+    else:
+        return jsonify([])
 
 if __name__ == '__main__':
     app.run(debug=True)
