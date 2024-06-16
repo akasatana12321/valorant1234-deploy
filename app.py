@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 import os
 import logging
 
-# ログの設定
-logging.basicConfig(level=logging.INFO)
-
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -20,15 +17,18 @@ access_token = os.getenv('ACCESS_TOKEN')
 access_token_secret = os.getenv('ACCESS_TOKEN_SECRET')
 bearer_token = os.getenv('BEARER_TOKEN')
 
-# ログに環境変数を出力
+auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, callback='http://127.0.0.1:5000/callback')
+client = tweepy.Client(bearer_token=bearer_token)
+
+# ログの設定
+logging.basicConfig(level=logging.INFO)
+
+# 環境変数をログに出力
 logging.info(f"CONSUMER_KEY: {consumer_key}")
 logging.info(f"CONSUMER_SECRET: {consumer_secret}")
 logging.info(f"ACCESS_TOKEN: {access_token}")
 logging.info(f"ACCESS_TOKEN_SECRET: {access_token_secret}")
 logging.info(f"BEARER_TOKEN: {bearer_token}")
-
-auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, callback='http://127.0.0.1:5000/callback')
-client = tweepy.Client(bearer_token=bearer_token)
 
 @app.route('/')
 def index():
@@ -53,26 +53,37 @@ def callback():
 
 @app.route('/api/tweets', methods=['GET'])
 def get_tweets():
-    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-    date_since = yesterday.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-    query = '#VALORANT lang:ja -is:retweet'
     try:
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        date_since = yesterday.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        query = '#VALORANT lang:ja -is:retweet'
         response = client.search_recent_tweets(query=query, start_time=date_since, max_results=100, tweet_fields=['created_at', 'public_metrics'])
-    except tweepy.errors.TweepyException as e:
-        logging.error(f"Error fetching tweets: {e}")
-        return jsonify({"error": "Error fetching tweets"}), 500
 
-    sorted_tweets = sorted(response.data, key=lambda tweet: tweet.public_metrics['like_count'], reverse=True)
+        # レートリミット情報を取得
+        rate_limit_limit = response.headers.get('x-rate-limit-limit')
+        rate_limit_remaining = response.headers.get('x-rate-limit-remaining')
+        rate_limit_reset = response.headers.get('x-rate-limit-reset')
 
-    tweet_data = [{
-        'user': tweet.author_id,
-        'text': tweet.text,
-        'likes': tweet.public_metrics['like_count'],
-        'id': tweet.id
-    } for tweet in sorted_tweets]
+        logging.info(f"Rate Limit: {rate_limit_limit}")
+        logging.info(f"Remaining: {rate_limit_remaining}")
+        logging.info(f"Reset Time: {datetime.datetime.fromtimestamp(int(rate_limit_reset))}")
 
-    return jsonify(tweet_data)
+        sorted_tweets = sorted(response.data, key=lambda tweet: tweet.public_metrics['like_count'], reverse=True)
+
+        tweet_data = [{
+            'user': tweet.author_id,
+            'text': tweet.text,
+            'likes': tweet.public_metrics['like_count'],
+            'id': tweet.id
+        } for tweet in sorted_tweets]
+
+        return jsonify(tweet_data)
+    except tweepy.errors.TooManyRequests as e:
+        reset_time = e.response.headers.get('x-rate-limit-reset')
+        reset_datetime = datetime.datetime.fromtimestamp(int(reset_time))
+        logging.error(f"Rate limit exceeded. Try again at {reset_datetime}")
+        return jsonify({"error": f"Rate limit exceeded. Try again at {reset_datetime}"}), 429
 
 if __name__ == '__main__':
     app.run(debug=True)
